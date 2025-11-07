@@ -1,8 +1,7 @@
-// ./components/Header.jsx
 import React from 'react';
 import { UserCircle, Plus, Search } from 'lucide-react';
 
-const Header = () => (
+const Header = ({ query, onQueryChange }) => (
   <header className="bg-red-700 text-white p-4 flex items-center justify-between shadow-lg">
     {/* Logo */}
     <div className="flex items-center">
@@ -15,12 +14,15 @@ const Header = () => (
     {/* Search Bar */}
     <div className="flex-1 max-w-lg mx-8">
       <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={18} />
         <input
+          className="w-full pl-10 pr-4 py-2 rounded-lg text-black"
           type="text"
-          placeholder="Search"
-          className="w-full bg-black bg-opacity-30 text-white placeholder-gray-300 rounded-full py-3 px-6 pl-12 focus:outline-none focus:ring-2 focus:ring-white focus:bg-opacity-40"
+          placeholder="Search events…"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          aria-label="Search events"
         />
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
       </div>
     </div>
 
@@ -38,3 +40,4 @@ const Header = () => (
 );
 
 export default Header;
+

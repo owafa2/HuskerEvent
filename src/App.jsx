@@ -1,5 +1,4 @@
-// ./App.jsx
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import Header from './components/Header.jsx';
 import Calendar from './components/Calendar.jsx';
 import EventCard from './components/EventCard.jsx';
@@ -9,26 +8,40 @@ export default function App() {
   const apiKey = "AIzaSyAVqgZ7cFS1H6VR2ffVH1We8Z9KYkB3-D0";
 
   const events = [
-    { title: "The Union", coords: { lat: 40.8213, lng: -96.7031 } },
-    { title: "Memorial Stadium", coords: { lat: 40.8176, lng: -96.6990 } },
+    { id: 'u1', title: "The Union", location: "The Union", date: "10/15/2025", time: "18:00", coords: { lat: 40.8213, lng: -96.7031 } },
+    { id: 'm1', title: "Memorial Stadium", location: "Memorial Stadium", date: "10/20/2025", time: "19:00", coords: { lat: 40.8176, lng: -96.6990 } },
   ];
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const norm = (s) => (s || '').toLowerCase().trim();
+
+  const filteredEvents = useMemo(() => {
+    const q = norm(searchQuery);
+    if (!q) return events;
+    return events.filter(ev => {
+      const hay = norm([ev.title, ev.location].join(' '));
+      return hay.includes(q);
+    });
+  }, [events, searchQuery]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-800 text-gray-200 font-sans">
-      <Header />
-        <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-hidden">
-          {/* Left Column */}
-          <div className="md:col-span-5 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
-            <Calendar />
-            <EventCard title="Tech Meet" date="10/15/2025" time="18:00" location="The Union" />
-            <EventCard title="Football Exhibition" date="10/20/2025" time="19:00" location="Memorial Stadium" />
-          </div>
+      <Header query={searchQuery} onQueryChange={setSearchQuery} />
+      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-hidden">
+        <div className="md:col-span-5 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+          <Calendar events={filteredEvents.map(e => ({ id: e.id, title: e.title, date: e.date }))} />
+          {filteredEvents.map(e => (
+            <EventCard key={e.id} title={e.title} date={e.date} time={e.time} location={e.location} />
+          ))}
+          {!filteredEvents.length && (
+            <div className="text-sm text-gray-400">No events found.</div>
+          )}
+        </div>
 
-          {/* Right Column */}
-          <div className="md:col-span-7 h-full w-full rounded-lg overflow-hidden shadow-lg">
-            <MapView apiKey={apiKey} events={events} />
-          </div>
-        </main>
+        <div className="md:col-span-7 h-full w-full rounded-lg overflow-hidden shadow-lg">
+          <MapView apiKey={apiKey} events={filteredEvents} />
+        </div>
+      </main>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -49,3 +62,4 @@ export default function App() {
     </div>
   );
 }
+
