@@ -64,5 +64,9 @@ export default function StyledGoogleCalendar({ events = [] }) {
   
     </div>
   );
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe

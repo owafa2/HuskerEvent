@@ -1,13 +1,23 @@
+<<<<<<< HEAD
 import React from 'react';
 import { UserCircle, Plus, Search } from 'lucide-react';
 
 const Header = ({ query, onQueryChange }) => (
+=======
+// ./components/Header.jsx
+import React from "react";
+import { UserCircle, Plus, Search } from "lucide-react";
+
+const Header = ({ onCreateClick }) => (
+>>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
   <header className="bg-red-700 text-white p-4 flex items-center justify-between shadow-lg">
     {/* Logo */}
     <div className="flex items-center">
       <div className="bg-white text-red-700 w-16 h-16 flex items-center justify-center rounded-lg">
         <span className="text-4xl font-extrabold tracking-tighter">N</span>
-        <span className="text-4xl font-extrabold tracking-tighter -ml-1.5">HE</span>
+        <span className="text-4xl font-extrabold tracking-tighter -ml-1.5">
+          HE
+        </span>
       </div>
     </div>
 
@@ -23,12 +33,23 @@ const Header = ({ query, onQueryChange }) => (
           onChange={(e) => onQueryChange(e.target.value)}
           aria-label="Search events"
         />
+<<<<<<< HEAD
+=======
+        <Search
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
+          size={20}
+        />
+>>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
       </div>
     </div>
 
     {/* Actions */}
     <div className="flex items-center gap-4">
-      <button className="flex items-center gap-2 bg-white text-gray-900 font-semibold py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors">
+      <button
+        type="button"
+        onClick={() => onCreateClick?.()}
+        className="flex items-center gap-2 bg-white text-gray-900 font-semibold py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors"
+      >
         <Plus size={20} />
         <span>Create Event</span>
       </button>
@@ -39,5 +60,9 @@ const Header = ({ query, onQueryChange }) => (
   </header>
 );
 
+<<<<<<< HEAD
 export default Header;
 
+=======
+export default Header;
+>>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
