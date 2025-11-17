@@ -3,11 +3,15 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-export default function StyledGoogleCalendar({ events = [] }) {
+export default function StyledGoogleCalendar({ events = [], onDateSelect }) {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const handleDateClick = (info) => {
     setSelectedDate(info.dateStr);
+
+    if (onDateSelect) {
+      onDateSelect(info.dateStr);   // <-- IMPORTANT required change
+    }
   };
 
   const fcEvents = events
@@ -40,6 +44,7 @@ export default function StyledGoogleCalendar({ events = [] }) {
           dayCellClassNames={(arg) => {
             let classes =
               "transition-colors duration-200 rounded-lg cursor-pointer text-xs p-1";
+
             const today = new Date();
             const day = arg.date;
 
@@ -61,12 +66,6 @@ export default function StyledGoogleCalendar({ events = [] }) {
           }}
         />
       </div>
-  
     </div>
   );
-<<<<<<< HEAD
 }
-
-=======
-}
->>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe

@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import React, { useMemo, useState } from 'react';
-import Header from './components/Header.jsx';
-import Calendar from './components/Calendar.jsx';
-import EventCard from './components/EventCard.jsx';
-import MapView from './components/MapView.jsx';
-=======
 import React, { useMemo, useState } from "react";
 import Header from "./components/Header.jsx";
 import Calendar from "./components/Calendar.jsx";
@@ -13,55 +6,21 @@ import MapView from "./components/MapView.jsx";
 import EventSummary from "./components/EventSummary.jsx";
 import useEventForm from "./hooks/createEventForm.js";
 import usePersistentEvents from "./hooks/persistentEvents.js";
->>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
 
 export default function App() {
   const apiKey = "AIzaSyAVqgZ7cFS1H6VR2ffVH1We8Z9KYkB3-D0";
 
-<<<<<<< HEAD
-  const events = [
-    { id: 'u1', title: "The Union", location: "The Union", date: "10/15/2025", time: "18:00", coords: { lat: 40.8213, lng: -96.7031 } },
-    { id: 'm1', title: "Memorial Stadium", location: "Memorial Stadium", date: "10/20/2025", time: "19:00", coords: { lat: 40.8176, lng: -96.6990 } },
-  ];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [sortMode, setSortMode] = useState("date-asc");
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const norm = (s) => (s || '').toLowerCase().trim();
-
-  const filteredEvents = useMemo(() => {
-    const q = norm(searchQuery);
-    if (!q) return events;
-    return events.filter(ev => {
-      const hay = norm([ev.title, ev.location].join(' '));
-      return hay.includes(q);
-    });
-  }, [events, searchQuery]);
-
-  return (
-    <div className="flex flex-col h-screen bg-gray-800 text-gray-200 font-sans">
-      <Header query={searchQuery} onQueryChange={setSearchQuery} />
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-hidden">
-        <div className="md:col-span-5 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
-          <Calendar events={filteredEvents.map(e => ({ id: e.id, title: e.title, date: e.date }))} />
-          {filteredEvents.map(e => (
-            <EventCard key={e.id} title={e.title} date={e.date} time={e.time} location={e.location} />
-          ))}
-          {!filteredEvents.length && (
-            <div className="text-sm text-gray-400">No events found.</div>
-          )}
-        </div>
-
-        <div className="md:col-span-7 h-full w-full rounded-lg overflow-hidden shadow-lg">
-          <MapView apiKey={apiKey} events={filteredEvents} />
-        </div>
-      </main>
-=======
   const coordsByLocation = useMemo(
     () => ({
       "The Union": { lat: 40.817748017902026, lng: -96.70036127955429 },
       "Memorial Stadium": { lat: 40.82069437820795, lng: -96.70558792268038 },
       "Avery Hall": { lat: 40.81947974559484, lng: -96.7044773183429 },
-      "Selleck": { lat: 40.81901427788554, lng: -96.69949222684372 },
-      "Kaufmann": { lat: 40.81977928709701, lng: -96.7004736305157 },
+      Selleck: { lat: 40.81901427788554, lng: -96.69949222684372 },
+      Kaufmann: { lat: 40.81977928709701, lng: -96.7004736305157 },
     }),
     []
   );
@@ -86,37 +45,108 @@ export default function App() {
   ];
 
   const [events, setEvents] = usePersistentEvents("events_v1", initialEvents);
-  const [selectedDate, setSelectedDate] = useState("");
 
-  const {
-    showForm,
-    form,
-    setForm,
-    openForm,
-    closeForm,
-    addEvent,
-  } = useEventForm(coordsByLocation, selectedDate);
+  const { showForm, form, setForm, openForm, closeForm, addEvent } =
+    useEventForm(coordsByLocation, selectedDate);
 
-  // Track which event card was clicked
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedEventIndex, setSelectedEventIndex] = useState(-1);
-  const openEvent = (ev, idx) => { setSelectedEvent(ev); setSelectedEventIndex(idx); };
-  const closeEvent = () => { setSelectedEvent(null); setSelectedEventIndex(-1); };
 
-  // Delete only the selected event and close the modal
+  const openEvent = (ev, idx) => {
+    setSelectedEvent(ev);
+    setSelectedEventIndex(idx);
+  };
+
+  const closeEvent = () => {
+    setSelectedEvent(null);
+    setSelectedEventIndex(-1);
+  };
+
   const deleteSelectedEvent = () => {
     setEvents((prev) => prev.filter((_, i) => i !== selectedEventIndex));
     closeEvent();
   };
 
+  const matchesSearch = (ev) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    const text = `${ev.title ?? ""} ${ev.location ?? ""} ${
+      ev.description ?? ""
+    }`.toLowerCase();
+    return text.includes(q);
+  };
+
+  // Treat dates as MM/DD/YYYY (US style) and convert to ISO YYYY-MM-DD
+  const toISOFromMDY = (value) => {
+    if (!value) return null;
+    const parts = value.split("/");
+    if (parts.length !== 3) return null;
+    const [month, day, year] = parts;
+    const m = month.padStart(2, "0");
+    const d = day.padStart(2, "0");
+    return `${year}-${m}-${d}`;
+  };
+
+  const matchesSelectedDate = (ev) => {
+    if (!selectedDate) return true;
+    if (!ev.date) return true;
+    const iso = toISOFromMDY(ev.date);
+    if (!iso) return true;
+    return iso === selectedDate;
+  };
+
+  const filteredEventsWithIndex = useMemo(() => {
+    const filtered = events
+      .map((ev, idx) => ({ ev, idx }))
+      .filter(({ ev }) => matchesSearch(ev) && matchesSelectedDate(ev));
+
+    filtered.sort((a, b) => {
+      const ia = toISOFromMDY(a.ev.date || "");
+      const ib = toISOFromMDY(b.ev.date || "");
+
+      if (!ia && !ib) return 0;
+      if (!ia) return 1;
+      if (!ib) return -1;
+
+      if (sortMode === "date-asc") {
+        return ia.localeCompare(ib);
+      } else {
+        return ib.localeCompare(ia);
+      }
+    });
+
+    return filtered;
+  }, [events, searchQuery, selectedDate, sortMode]);
+
+  const filteredEventsForMap = useMemo(
+    () => filteredEventsWithIndex.map(({ ev }) => ev),
+    [filteredEventsWithIndex]
+  );
+
+  const cycleSortMode = () => {
+    setSortMode((prev) => (prev === "date-asc" ? "date-desc" : "date-asc"));
+  };
+
+  const sortLabel =
+    sortMode === "date-asc" ? "Sort: Date ↑" : "Sort: Date ↓";
+
   return (
     <div className="flex flex-col h-screen bg-gray-800 text-gray-200 font-sans">
-      <Header onCreateClick={openForm} />
+      <Header
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        onCreateClick={openForm}
+        sortLabel={sortLabel}
+        onToggleSort={cycleSortMode}
+      />
 
       <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 p-6 overflow-hidden">
         <div className="md:col-span-5 flex flex-col gap-6 pr-2 h-full overflow-hidden">
           <div className="flex-none h-[380px] md:h-[460px] shrink-0">
-            <Calendar onDateSelect={(d) => setSelectedDate(d)} />
+            <Calendar
+              events={events}
+              onDateSelect={(d) => setSelectedDate(d)}
+            />
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3">
@@ -124,8 +154,12 @@ export default function App() {
               <div className="bg-gray-900 rounded-xl p-4 text-sm text-gray-400">
                 No events yet. Click “Create Event” to add one.
               </div>
+            ) : filteredEventsWithIndex.length === 0 ? (
+              <div className="bg-gray-900 rounded-xl p-4 text-sm text-gray-400">
+                No events match your search or filters.
+              </div>
             ) : (
-              events.map((ev, idx) => (
+              filteredEventsWithIndex.map(({ ev, idx }) => (
                 <EventCard
                   key={idx}
                   title={ev.title}
@@ -140,7 +174,7 @@ export default function App() {
         </div>
 
         <div className="md:col-span-7 h-full w-full rounded-lg overflow-hidden shadow-lg">
-          <MapView apiKey={apiKey} events={events} />
+          <MapView apiKey={apiKey} events={filteredEventsForMap} />
         </div>
       </main>
 
@@ -157,19 +191,23 @@ export default function App() {
               <input
                 className="w-full rounded-md bg-gray-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, title: e.target.value })
+                }
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-sm">Date (DD/MM/YYYY)</label>
+                <label className="text-sm">Date (MM/DD/YYYY)</label>
                 <input
                   className="w-full rounded-md bg-gray-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                   value={form.date}
-                  placeholder="28/10/2025"
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  placeholder="10/28/2025"
+                  onChange={(e) =>
+                    setForm({ ...form, date: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -179,7 +217,9 @@ export default function App() {
                   className="w-full rounded-md bg-gray-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                   value={form.time}
                   placeholder="18:00"
-                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, time: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -191,7 +231,9 @@ export default function App() {
                 className="w-full rounded-md bg-gray-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[90px]"
                 value={form.description}
                 placeholder="Write a short summary..."
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
               />
             </div>
 
@@ -200,7 +242,9 @@ export default function App() {
               <select
                 className="w-full rounded-md bg-gray-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, location: e.target.value })
+                }
                 required
               >
                 <option value="" disabled>
@@ -245,7 +289,6 @@ export default function App() {
           onDelete={deleteSelectedEvent}
         />
       )}
->>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
@@ -255,9 +298,5 @@ export default function App() {
       `}</style>
     </div>
   );
-<<<<<<< HEAD
 }
 
-=======
-}
->>>>>>> 91af6e2d07bcb7555cee5f67bfa73091a1872cfe
